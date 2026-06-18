@@ -5,7 +5,13 @@ import * as schema from "./schema";
 const connectionString = process.env.DATABASE_URL;
 
 const client = connectionString
-  ? postgres(connectionString, { prepare: false })
+  ? postgres(connectionString, {
+      prepare: false,
+      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+      max_lifetime: 60 * 30, // 30 minutes
+      connect_timeout: 10,
+      idle_timeout: 20,
+    })
   : null;
 
 const _db = client ? drizzle(client, { schema }) : null;

@@ -5,3 +5,5 @@ export * from "./leads";
 export * from "./billing";
 export * from "./content";
 export * from "./analytics";
+export * from "./auth";
+export * from "./agency";
