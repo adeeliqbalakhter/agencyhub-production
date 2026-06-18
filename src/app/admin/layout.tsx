@@ -7,8 +7,6 @@ import {
   Building2,
   Users,
   Star,
-  Flag,
-  Settings,
   LogOut,
   Shield,
   Menu,
@@ -26,8 +24,6 @@ const sidebarLinks = [
   { name: "Leads", href: "/admin/leads", icon: FileText },
   { name: "Credits", href: "/admin/credits", icon: CreditCard },
   { name: "Reviews", href: "/admin/reviews", icon: Star },
-  { name: "Reports", href: "/admin/reports", icon: Flag },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 export default function AdminLayout({

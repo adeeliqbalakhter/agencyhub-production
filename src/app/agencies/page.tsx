@@ -314,7 +314,9 @@ export default async function AgenciesPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(agenciesJsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(agenciesJsonLd).replace(/</g, "\\u003c"),
+        }}
       />
       {/* Page header */}
       <section className="bg-navy">

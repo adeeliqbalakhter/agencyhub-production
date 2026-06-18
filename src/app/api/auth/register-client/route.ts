@@ -17,7 +17,7 @@ const clientRegisterSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = checkRateLimit(request, { windowMs: 60_000, maxRequests: 5 }, "register-client");
+    const rl = await checkRateLimit(request, { windowMs: 60_000, maxRequests: 5 }, "register-client");
     if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
     if (!hasDb()) return error("Database not available", 503);

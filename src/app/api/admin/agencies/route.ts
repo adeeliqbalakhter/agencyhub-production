@@ -4,8 +4,13 @@ import { sql } from "drizzle-orm";
 import { requireRole } from "@/lib/auth/guards";
 import { paginated, error } from "@/lib/api/response";
 
-const AGENCY_COLS = `a.id, a.name, a.slug, a.email, a.status, a.is_verified, a.is_featured, a.is_premium,
-       a.average_rating, a.total_reviews, a.created_at, u.name as owner_name, u.email as owner_email`;
+// Column whitelist for SELECT — prevents SQL injection via raw column strings
+const AGENCY_COLS = [
+  "a.id", "a.name", "a.slug", "a.email", "a.status",
+  "a.is_verified", "a.is_featured", "a.is_premium",
+  "a.average_rating", "a.total_reviews", "a.created_at",
+  "u.name as owner_name", "u.email as owner_email",
+] as const;
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,17 +33,17 @@ export async function GET(request: NextRequest) {
     if (status && query) {
       const pattern = `%${query}%`;
       countQuery = sql`SELECT count(*) as count FROM agencies a WHERE a.deleted_at IS NULL AND a.status = ${status} AND a.name ILIKE ${pattern}`;
-      dataQuery = sql`SELECT ${sql.raw(AGENCY_COLS)} FROM agencies a LEFT JOIN users u ON u.id = a.user_id WHERE a.deleted_at IS NULL AND a.status = ${status} AND a.name ILIKE ${pattern} ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+      dataQuery = sql`SELECT ${sql.raw(AGENCY_COLS.join(", "))} FROM agencies a LEFT JOIN users u ON u.id = a.user_id WHERE a.deleted_at IS NULL AND a.status = ${status} AND a.name ILIKE ${pattern} ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
     } else if (status) {
       countQuery = sql`SELECT count(*) as count FROM agencies a WHERE a.deleted_at IS NULL AND a.status = ${status}`;
-      dataQuery = sql`SELECT ${sql.raw(AGENCY_COLS)} FROM agencies a LEFT JOIN users u ON u.id = a.user_id WHERE a.deleted_at IS NULL AND a.status = ${status} ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+      dataQuery = sql`SELECT ${sql.raw(AGENCY_COLS.join(", "))} FROM agencies a LEFT JOIN users u ON u.id = a.user_id WHERE a.deleted_at IS NULL AND a.status = ${status} ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
     } else if (query) {
       const pattern = `%${query}%`;
       countQuery = sql`SELECT count(*) as count FROM agencies a WHERE a.deleted_at IS NULL AND a.name ILIKE ${pattern}`;
-      dataQuery = sql`SELECT ${sql.raw(AGENCY_COLS)} FROM agencies a LEFT JOIN users u ON u.id = a.user_id WHERE a.deleted_at IS NULL AND a.name ILIKE ${pattern} ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+      dataQuery = sql`SELECT ${sql.raw(AGENCY_COLS.join(", "))} FROM agencies a LEFT JOIN users u ON u.id = a.user_id WHERE a.deleted_at IS NULL AND a.name ILIKE ${pattern} ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
     } else {
       countQuery = sql`SELECT count(*) as count FROM agencies a WHERE a.deleted_at IS NULL`;
-      dataQuery = sql`SELECT ${sql.raw(AGENCY_COLS)} FROM agencies a LEFT JOIN users u ON u.id = a.user_id WHERE a.deleted_at IS NULL ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+      dataQuery = sql`SELECT ${sql.raw(AGENCY_COLS.join(", "))} FROM agencies a LEFT JOIN users u ON u.id = a.user_id WHERE a.deleted_at IS NULL ORDER BY a.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
     }
 
     const countResult = await db.execute(countQuery);

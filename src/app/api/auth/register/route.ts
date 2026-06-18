@@ -11,7 +11,7 @@ import { created, error, serverError } from "@/lib/api/response";
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = checkRateLimit(request, RATE_LIMITS.auth, "register");
+    const rl = await checkRateLimit(request, RATE_LIMITS.auth, "register");
     if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
     if (!hasDb()) return error("Database not available", 503);

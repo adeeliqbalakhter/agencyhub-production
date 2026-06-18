@@ -10,7 +10,7 @@ import { authenticateRequest } from "@/lib/auth/guards";
 export async function GET(request: NextRequest) {
   try {
     // Rate limit: 60 requests per minute per IP
-    const rateLimit = checkRateLimit(request, { windowMs: 60_000, maxRequests: 60 }, "search");
+    const rateLimit = await checkRateLimit(request, { windowMs: 60_000, maxRequests: 60 }, "search");
     if (!rateLimit.allowed) {
       return rateLimitResponse(rateLimit.resetAt);
     }

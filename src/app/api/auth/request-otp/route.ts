@@ -9,7 +9,7 @@ import { success, error, serverError } from "@/lib/api/response";
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = checkRateLimit(request, RATE_LIMITS.otp, "request-otp");
+    const rl = await checkRateLimit(request, RATE_LIMITS.otp, "request-otp");
     if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
     if (!hasDb()) return error("Database not available", 503);

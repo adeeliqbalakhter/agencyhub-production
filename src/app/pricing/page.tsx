@@ -142,7 +142,9 @@ export default function PricingPage() {
     <div className="bg-gray-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqStructuredData).replace(/</g, "\\u003c"),
+        }}
       />
       {/* Header */}
       <section className="bg-navy py-16">

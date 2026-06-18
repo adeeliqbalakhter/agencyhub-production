@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   title: "How It Works - Find and Hire Marketing Agencies",
   description:
     "Learn how AgencyHub helps you find, compare, and hire the best marketing agencies. Free quotes, verified reviews, and smart matching.",
+  alternates: {
+    canonical: "/how-it-works",
+  },
 };
 
 const forBusinesses = [

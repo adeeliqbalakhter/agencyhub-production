@@ -1,10 +1,15 @@
 import { NextRequest } from "next/server";
+import { requireRole } from "@/lib/auth/guards";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { success, error, serverError } from "@/lib/api/response";
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Enforce RBAC - only authenticated admins/super_admins can promote
+    const authResult = await requireRole(request, "super_admin", "admin");
+    if ("error" in authResult) return authResult.error;
+
     const body = await request.json();
     const { email, secret } = body as { email?: string; secret?: string };
 
@@ -12,7 +17,13 @@ export async function POST(request: NextRequest) {
       return error("Email and secret are required", 400);
     }
 
-    const expectedSecret = process.env.ADMIN_SECRET || "setup123";
+    // 2. Require ADMIN_SECRET env var to be set - no fallback default
+    const expectedSecret = process.env.ADMIN_SECRET;
+    if (!expectedSecret) {
+      return error("Admin secret not configured", 403);
+    }
+
+    // 3. Validate the secret matches
     if (secret !== expectedSecret) {
       return error("Invalid secret", 403);
     }

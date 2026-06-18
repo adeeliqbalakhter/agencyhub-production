@@ -56,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const rateLimit = checkRateLimit(request, { windowMs: 60_000, maxRequests: 30 }, "analytics");
+    const rateLimit = await checkRateLimit(request, { windowMs: 60_000, maxRequests: 30 }, "analytics");
     if (!rateLimit.allowed) {
       return rateLimitResponse(rateLimit.resetAt);
     }

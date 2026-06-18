@@ -11,7 +11,7 @@ const MAX_OTP_ATTEMPTS = 5;
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = checkRateLimit(request, RATE_LIMITS.otp, "verify-otp");
+    const rl = await checkRateLimit(request, RATE_LIMITS.otp, "verify-otp");
     if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
     if (!hasDb()) return error("Database not available", 503);

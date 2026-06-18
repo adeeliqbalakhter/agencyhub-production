@@ -521,13 +521,17 @@ export default async function AgencyProfilePage({
       {isActive && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
         />
       )}
       {isActive && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
+          }}
         />
       )}
 

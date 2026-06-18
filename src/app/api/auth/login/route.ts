@@ -10,7 +10,7 @@ import { success, error, serverError } from "@/lib/api/response";
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = checkRateLimit(request, RATE_LIMITS.auth, "login");
+    const rl = await checkRateLimit(request, RATE_LIMITS.auth, "login");
     if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
     if (!hasDb()) return error("Database not available", 503);
@@ -103,11 +103,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const secureCookie = process.env.NODE_ENV === "production";
+    const secureCookie = process.env.NODE_ENV !== "development";
     response.cookies.set("access_token", accessToken, {
       httpOnly: true,
       secure: secureCookie,
-      sameSite: "lax",
+      sameSite: "strict",
       path: "/",
       maxAge: 15 * 60, // 15 minutes
     });

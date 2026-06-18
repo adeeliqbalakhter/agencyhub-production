@@ -34,11 +34,17 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
 }
 
 export function getClientIp(request: NextRequest): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown"
-  );
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp;
+
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const ips = forwarded.split(",").map((s) => s.trim()).filter(Boolean);
+    const trustedProxyCount = parseInt(process.env.TRUSTED_PROXY_COUNT || "1");
+    const index = Math.max(ips.length - trustedProxyCount - 1, 0);
+    return ips[index] || "unknown";
+  }
+  return "unknown";
 }
 
 export async function logLoginAttempt(

@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const rateLimit = checkRateLimit(request, { windowMs: 3600_000, maxRequests: 10 }, `review:${ip}`);
+    const rateLimit = await checkRateLimit(request, { windowMs: 3600_000, maxRequests: 10 }, `review:${ip}`);
     if (!rateLimit.allowed) {
       return rateLimitResponse(rateLimit.resetAt);
     }

@@ -3,12 +3,16 @@ import { Inter } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import SessionProvider from "@/components/providers/SessionProvider";
+import { siteConfig } from "@/config/site";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
 });
+
+const siteUrl = siteConfig.url;
+const ogImageUrl = `${siteUrl}/og-image.png`;
 
 export const metadata: Metadata = {
   title: {
@@ -35,12 +39,14 @@ export const metadata: Metadata = {
     title: "AgencyHub - Find & Hire the Best Marketing Agencies Worldwide",
     description:
       "Discover top-rated marketing agencies worldwide. Compare reviews, portfolios, and pricing.",
+    images: [ogImageUrl],
   },
   twitter: {
     card: "summary_large_image",
     title: "AgencyHub - Find & Hire the Best Marketing Agencies Worldwide",
     description:
       "Discover top-rated marketing agencies worldwide. Compare reviews, portfolios, and pricing.",
+    images: [ogImageUrl],
   },
   robots: {
     index: true,

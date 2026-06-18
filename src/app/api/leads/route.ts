@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimit = checkRateLimit(request, { windowMs: 60_000, maxRequests: 5 }, "lead-create");
+    const rateLimit = await checkRateLimit(request, { windowMs: 60_000, maxRequests: 5 }, "lead-create");
     if (!rateLimit.allowed) {
       return rateLimitResponse(rateLimit.resetAt);
     }

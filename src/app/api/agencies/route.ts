@@ -28,17 +28,21 @@ export async function GET(request: NextRequest) {
     const { page, limit, query, sortBy } = params.data;
     const offset = (page - 1) * limit;
 
-    let orderClause = "ORDER BY created_at DESC";
-    if (sortBy === "rating") orderClause = "ORDER BY average_rating DESC NULLS LAST";
-    else if (sortBy === "reviews") orderClause = "ORDER BY total_reviews DESC NULLS LAST";
-    else if (sortBy === "name") orderClause = "ORDER BY name ASC";
+    // Whitelist-safe ORDER BY — prevents SQL injection via sortBy
+    const ALLOWED_SORT_COLUMNS: Record<string, string> = {
+      rating: "average_rating DESC NULLS LAST",
+      reviews: "total_reviews DESC NULLS LAST",
+      name: "name ASC",
+      newest: "created_at DESC",
+    };
+    const sortColumn = ALLOWED_SORT_COLUMNS[sortBy ?? ""] ?? "created_at DESC";
 
     let results;
     let total;
 
     if (query) {
       results = await db.execute(
-        sql`SELECT * FROM agencies WHERE deleted_at IS NULL AND status = 'active' AND name ILIKE ${`%${query}%`} ${sql.raw(orderClause)} LIMIT ${limit} OFFSET ${offset}`
+        sql`SELECT * FROM agencies WHERE deleted_at IS NULL AND status = 'active' AND name ILIKE ${`%${query}%`} ORDER BY ${sql.raw(sortColumn)} LIMIT ${limit} OFFSET ${offset}`
       );
       const countResult = await db.execute(
         sql`SELECT count(*) as count FROM agencies WHERE deleted_at IS NULL AND status = 'active' AND name ILIKE ${`%${query}%`}`
@@ -46,7 +50,7 @@ export async function GET(request: NextRequest) {
       total = Number((countResult as unknown as Array<{ count: string }>)[0]?.count ?? 0);
     } else {
       results = await db.execute(
-        sql`SELECT * FROM agencies WHERE deleted_at IS NULL AND status = 'active' ${sql.raw(orderClause)} LIMIT ${limit} OFFSET ${offset}`
+        sql`SELECT * FROM agencies WHERE deleted_at IS NULL AND status = 'active' ORDER BY ${sql.raw(sortColumn)} LIMIT ${limit} OFFSET ${offset}`
       );
       const countResult = await db.execute(
         sql`SELECT count(*) as count FROM agencies WHERE deleted_at IS NULL AND status = 'active'`

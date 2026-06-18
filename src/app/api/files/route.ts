@@ -16,7 +16,7 @@ const ALLOWED_TYPES = [
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = checkRateLimit(request, RATE_LIMITS.upload, "upload");
+    const rl = await checkRateLimit(request, RATE_LIMITS.upload, "upload");
     if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
     const authResult = await requireAuth(request);
