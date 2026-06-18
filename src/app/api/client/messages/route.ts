@@ -49,7 +49,9 @@ export async function GET(request: NextRequest) {
       `);
       return success(rows);
     } catch (err) {
-      console.error("[CLIENT_MESSAGES] Query error:", err);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[CLIENT_MESSAGES] Query error:", err);
+      }
       return success([]);
     }
   } catch (err) {

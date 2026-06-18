@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     if (agenciesWithoutCredits.length === parsed.data.agencyIds.length) {
-      return Response.json({ error: "Agency has no remaining lead credits this month" }, { status: 403 });
+      return error("Agency has no remaining lead credits this month", 403);
     }
 
     const eligibleAgencyIds = parsed.data.agencyIds.filter(

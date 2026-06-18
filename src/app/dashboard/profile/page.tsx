@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   Building2,
   Globe,
@@ -463,7 +464,7 @@ export default function ProfilePage() {
           }}
         >
           {coverPreview ? (
-            <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
+            <Image src={coverPreview} alt="Cover" width={1200} height={400} className="w-full h-full object-cover" />
           ) : (
             <div className="text-center">
               <ImageIcon className="w-10 h-10 text-gray-300 mx-auto mb-2" />
@@ -494,7 +495,7 @@ export default function ProfilePage() {
             }}
           >
             {logoPreview ? (
-              <img src={logoPreview} alt="Logo" className="w-full h-full object-cover rounded-xl" />
+              <Image src={logoPreview} alt="Logo" width={80} height={80} className="w-full h-full object-cover rounded-xl" />
             ) : (
               <div className="text-center">
                 {uploadingLogo ? (

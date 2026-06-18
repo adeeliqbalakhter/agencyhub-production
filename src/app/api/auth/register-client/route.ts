@@ -104,7 +104,9 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (err) {
-    console.error("[REGISTER-CLIENT] Error:", err);
-    return error("Registration failed", 500);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[REGISTER-CLIENT] Error:", err);
+    }
+    return serverError(err);
   }
 }

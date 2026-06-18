@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { success, error, serverError } from "@/lib/api/response";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { checkRateLimit, rateLimitResponse } from "@/lib/services/rate-limit";
@@ -19,11 +20,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = contactSchema.safeParse(body);
     if (!parsed.success) {
-      return Response.json({ error: "Validation failed", details: parsed.error.format() }, { status: 400 });
+      return error("Validation failed", 400, parsed.error.format());
     }
 
     if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
+      return error("Database not available", 503);
     }
 
     const db = getDb();
@@ -38,8 +39,10 @@ export async function POST(request: NextRequest) {
     `);
 
     return Response.json({ message: "Message sent successfully" }, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/contact error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("POST /api/contact error:", err);
+    }
+    return serverError(err);
   }
 }

@@ -10,6 +10,8 @@ const ALLOWED_IMAGE_TYPES = [
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
+import { success, error, serverError } from "@/lib/api/response";
+
 export async function POST(request: NextRequest) {
   try {
     const authResult = await requireAuth(request);
@@ -65,8 +67,10 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
-    console.error("POST /api/upload error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("POST /api/upload error:", err);
+    }
+    return serverError(err);
   }
 }

@@ -89,7 +89,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         RETURNING *
       `);
     } catch (err) {
-      console.error("[PROPOSAL] Insert error:", err);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[PROPOSAL] Insert error:", err);
+      }
       return error("Failed to save proposal", 500);
     }
 
@@ -149,7 +151,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           `,
         });
       } catch (err) {
-        console.error("[PROPOSAL] Email send error:", err);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[PROPOSAL] Email send error:", err);
+        }
       }
     }
 

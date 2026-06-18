@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -515,6 +516,35 @@ export default async function AgencyProfilePage({
     sameAs: Object.values(socialLinks).filter(Boolean),
   };
 
+  const localBusinessJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    name: agency.name,
+    description: agency.tagline || agency.description,
+    url: `${baseUrl}/agencies/${agency.slug}`,
+    telephone: agency.phone,
+    email: agency.email,
+    image: agency.logo || `${baseUrl}/og-image.png`,
+    address: cityName ? {
+      "@type": "PostalAddress",
+      addressLocality: cityName,
+      addressCountry: countryName || "",
+    } : undefined,
+    geo: agency.latitude && agency.longitude ? {
+      "@type": "GeoCoordinates",
+      latitude: agency.latitude,
+      longitude: agency.longitude,
+    } : undefined,
+    aggregateRating: reviewCount > 0 ? {
+      "@type": "AggregateRating",
+      ratingValue: Number(agency.average_rating || 0).toFixed(1),
+      reviewCount: reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    } : undefined,
+    priceRange: agency.hourly_rate,
+  };
+
   return (
     <>
       {/* JSON-LD structured data (only for active agencies) */}
@@ -522,7 +552,7 @@ export default async function AgencyProfilePage({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+            __html: JSON.stringify([jsonLd, localBusinessJsonLd]).replace(/</g, "\\u003c"),
           }}
         />
       )}
@@ -554,7 +584,7 @@ export default async function AgencyProfilePage({
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             {/* Logo */}
             <div className="shrink-0">
-              <img
+              <Image
                 src={logoUrl}
                 alt={`${agency.name} logo`}
                 width={96}
@@ -1158,7 +1188,7 @@ export default async function AgencyProfilePage({
                   className="group bg-gray-50 rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-brand/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <img
+                    <Image
                       src={
                         a.logo ||
                         `https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&size=64&background=2563EB&color=fff&bold=true&format=svg`
@@ -1214,8 +1244,4 @@ export default async function AgencyProfilePage({
               ))}
             </div>
           </div>
-        </section>
-      )}
-    </>
-  );
-}
+        </s

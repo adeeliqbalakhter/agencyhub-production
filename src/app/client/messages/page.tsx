@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
   MessageSquare,
@@ -214,7 +215,7 @@ function ClientMessagesContent() {
                           isActive ? "bg-brand/10" : "bg-gray-100"
                         }`}>
                           {c.agency_logo ? (
-                            <img src={c.agency_logo} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                            <Image src={c.agency_logo} alt="" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
                           ) : (
                             <Building2 className={`w-5 h-5 ${isActive ? "text-brand" : "text-gray-400"}`} />
                           )}
@@ -261,7 +262,7 @@ function ClientMessagesContent() {
                     </button>
                     <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center">
                       {activeConvo.agency_logo ? (
-                        <img src={activeConvo.agency_logo} alt="" className="w-9 h-9 rounded-xl object-cover" />
+                        <Image src={activeConvo.agency_logo} alt="" width={36} height={36} className="w-9 h-9 rounded-xl object-cover" />
                       ) : (
                         <Building2 className="w-4 h-4 text-brand" />
                       )}

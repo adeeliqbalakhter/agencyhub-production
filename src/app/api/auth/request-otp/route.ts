@@ -47,7 +47,9 @@ export async function POST(request: NextRequest) {
         VALUES (${user.id}, ${code}, ${type}, ${new Date(Date.now() + 10 * 60 * 1000).toISOString()})
       `);
     } catch (e) {
-      console.error("Failed to insert OTP token:", e);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Failed to insert OTP token:", e);
+      }
       return success({ message: "If an account exists, a verification code has been sent." });
     }
 
@@ -65,7 +67,9 @@ export async function POST(request: NextRequest) {
     const sent = await sendEmail({ ...emailData, to: email });
 
     if (!sent) {
-      console.error("[OTP] Email send failed for", email);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[OTP] Email send failed for", email);
+      }
     }
 
     return success({

@@ -6,6 +6,7 @@ import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { createLeadSchema } from "@/lib/validations";
 import { isAdmin } from "@/lib/auth/rbac";
+import { success, error, serverError, created } from "@/lib/api/response";
 import { autoAssignLead } from "@/lib/services/lead-assignment";
 
 const leadQuerySchema = z.object({
@@ -24,10 +25,7 @@ export async function GET(request: NextRequest) {
     const { user } = authResult;
 
     if (!hasDb()) {
-      return Response.json({
-        data: [],
-        pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
-      });
+      return success([], { page: 1, limit: 10, total: 0, totalPages: 0 });
     }
 
     const { searchParams } = request.nextUrl;
@@ -37,10 +35,7 @@ export async function GET(request: NextRequest) {
     );
 
     if (!params.success) {
-      return Response.json(
-        { error: "Invalid query parameters", details: params.error.format() },
-        { status: 400 }
-      );
+      return error("Invalid query parameters", 400, params.error.format());
     }
 
     const { agencyId, status, page, limit } = params.data;
@@ -74,7 +69,7 @@ export async function GET(request: NextRequest) {
       );
       const agency = (agencyRows as unknown as Array<Record<string, unknown>>)[0];
       if (!agency) {
-        return Response.json({ error: "Forbidden" }, { status: 403 });
+        return error("Forbidden", 403);
       }
 
       try {
@@ -191,9 +186,11 @@ export async function GET(request: NextRequest) {
         pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       });
     }
-  } catch (error) {
-    console.error("GET /api/leads error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/leads error:", err);
+    }
+    return serverError(err);
   }
 }
 
@@ -210,15 +207,10 @@ export async function POST(request: NextRequest) {
     const parsed = createLeadSchema.safeParse(body);
 
     if (!parsed.success) {
-      return Response.json(
-        { error: "Validation failed", details: parsed.error.format() },
-        { status: 400 }
-      );
+      return error("Validation failed", 400, parsed.error.format());
     }
 
-    if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
-    }
+    if (!hasDb()) return error("Database not available", 503);
 
     const db = getDb();
     const data = parsed.data;
@@ -248,7 +240,7 @@ export async function POST(request: NextRequest) {
     const lead = (rows as unknown as Array<Record<string, unknown>>)[0];
 
     if (!lead) {
-      return Response.json({ error: "Failed to create lead" }, { status: 500 });
+      return error("Failed to create lead", 500);
     }
 
     const leadId = lead.id as string;
@@ -270,13 +262,17 @@ export async function POST(request: NextRequest) {
         const parsedServiceIds = data.serviceIds && data.serviceIds.length > 0 ? data.serviceIds : null;
         await autoAssignLead(leadId, parsedServiceIds, data.industryId ?? null);
       } catch (err) {
-        console.error("[LEADS] Auto-assignment error:", err);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[LEADS] Auto-assignment error:", err);
+        }
       }
     }
 
-    return Response.json({ data: lead }, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/leads error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return created(lead);
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("POST /api/leads error:", err);
+    }
+    return serverError(err);
   }
 }

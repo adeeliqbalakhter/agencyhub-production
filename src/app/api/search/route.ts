@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { searchParamsSchema } from "@/lib/validations";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
+import { success, error, serverError } from "@/lib/api/response";
 import { checkRateLimit, rateLimitResponse } from "@/lib/services/rate-limit";
 import { authenticateRequest } from "@/lib/auth/guards";
 
@@ -315,11 +316,10 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages },
       facets,
     });
-  } catch (error) {
-    console.error("GET /api/search error:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/search error:", err);
+    }
+    return serverError(err);
   }
 }

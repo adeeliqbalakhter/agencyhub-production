@@ -4,11 +4,12 @@ import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { createAgencySchema, searchParamsSchema } from "@/lib/validations";
 import slugify from "slugify";
+import { success, error, serverError, created } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
     if (!hasDb()) {
-      return Response.json({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
+      return success([], { page: 1, limit: 20, total: 0, totalPages: 0 });
     }
 
     const db = getDb();
@@ -19,10 +20,7 @@ export async function GET(request: NextRequest) {
     );
 
     if (!params.success) {
-      return Response.json(
-        { error: "Invalid query parameters", details: params.error.format() },
-        { status: 400 }
-      );
+      return error("Invalid query parameters", 400, params.error.format());
     }
 
     const { page, limit, query, sortBy } = params.data;
@@ -58,14 +56,12 @@ export async function GET(request: NextRequest) {
       total = Number((countResult as unknown as Array<{ count: string }>)[0]?.count ?? 0);
     }
 
-    return Response.json({
-      data: results,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
-  } catch (error: unknown) {
-    console.error("GET /api/agencies error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return Response.json({ error: "Internal server error", details: msg }, { status: 500 });
+    return success(results, { page, limit, total, totalPages: Math.ceil(total / limit) });
+  } catch (err: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/agencies error:", err);
+    }
+    return serverError(err);
   }
 }
 
@@ -75,19 +71,14 @@ export async function POST(request: NextRequest) {
     if ("error" in authResult) return authResult.error;
     const { user } = authResult;
 
-    if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
-    }
+    if (!hasDb()) return error("Database not available", 503);
 
     const db = getDb();
     const body = await request.json();
     const parsed = createAgencySchema.safeParse(body);
 
     if (!parsed.success) {
-      return Response.json(
-        { error: "Validation failed", details: parsed.error.format() },
-        { status: 400 }
-      );
+      return error("Validation failed", 400, parsed.error.format());
     }
 
     const data = parsed.data;
@@ -127,7 +118,7 @@ export async function POST(request: NextRequest) {
     const agency = (rows as unknown as Array<Record<string, unknown>>)[0];
 
     if (!agency) {
-      return Response.json({ error: "Failed to create agency" }, { status: 500 });
+      return error("Failed to create agency", 500);
     }
 
     const agencyId = agency.id as string;
@@ -162,19 +153,15 @@ export async function POST(request: NextRequest) {
     const finalRows = await db.execute(sql`SELECT * FROM agencies WHERE id = ${agencyId}`);
     const finalAgency = (finalRows as unknown as Array<Record<string, unknown>>)[0] ?? agency;
 
-    return Response.json({ data: finalAgency }, { status: 201 });
-  } catch (error: unknown) {
-    console.error("POST /api/agencies error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    if (msg.includes("unique") || msg.includes("duplicate")) {
-      return Response.json(
-        { error: "An agency with this name already exists. Please use a different name." },
-        { status: 409 }
-      );
+    return created(finalAgency);
+  } catch (err: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("POST /api/agencies error:", err);
     }
-    return Response.json(
-      { error: "Internal server error", details: msg },
-      { status: 500 }
-    );
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    if (msg.includes("unique") || msg.includes("duplicate")) {
+      return error("An agency with this name already exists. Please use a different name.", 409);
+    }
+    return serverError(err);
   }
 }

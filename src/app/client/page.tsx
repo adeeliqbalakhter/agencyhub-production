@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   FolderOpen,
@@ -319,7 +320,7 @@ export default function ClientProjectsPage() {
                               title={a.agencyName}
                             >
                               {a.agencyLogo ? (
-                                <img src={a.agencyLogo} alt="" className="w-full h-full rounded-full object-cover" />
+                                <Image src={a.agencyLogo} alt="" width={32} height={32} className="w-full h-full rounded-full object-cover" />
                               ) : (
                                 <span className="text-[10px] font-bold text-brand">
                                   {a.agencyName?.charAt(0) || "A"}
@@ -428,7 +429,7 @@ export default function ClientProjectsPage() {
                                         isWinner ? "bg-emerald-100" : isInterested ? "bg-blue-100" : "bg-gray-100"
                                       }`}>
                                         {agency.agencyLogo ? (
-                                          <img src={agency.agencyLogo} alt="" className="w-11 h-11 rounded-xl object-cover" />
+                                          <Image src={agency.agencyLogo} alt="" width={44} height={44} className="w-11 h-11 rounded-xl object-cover" />
                                         ) : (
                                           <Building2 className={`w-5 h-5 ${isWinner ? "text-emerald-600" : isInterested ? "text-brand" : "text-gray-400"}`} />
                                         )}
@@ -532,7 +533,7 @@ export default function ClientProjectsPage() {
                                           isAccepted ? "bg-emerald-100" : "bg-blue-50"
                                         }`}>
                                           {proposal.agency_logo ? (
-                                            <img src={proposal.agency_logo} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                                            <Image src={proposal.agency_logo} alt="" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
                                           ) : (
                                             <Building2 className={`w-5 h-5 ${isAccepted ? "text-emerald-600" : "text-brand"}`} />
                                           )}

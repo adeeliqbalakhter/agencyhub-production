@@ -4,6 +4,7 @@ import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { success, error, serverError } from "@/lib/api/response";
 
 const updateAgencySchema = z.object({
   name: z.string().min(1).max(255).optional(),
@@ -41,9 +42,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
-    }
+    if (!hasDb()) return error("Database not available", 503);
 
     const db = getDb();
     const rows = await db.execute(
@@ -51,15 +50,14 @@ export async function GET(
     );
     const agency = (rows as unknown as Array<Record<string, unknown>>)[0];
 
-    if (!agency) {
-      return Response.json({ error: "Agency not found" }, { status: 404 });
-    }
+    if (!agency) return error("Agency not found", 404);
 
-    return Response.json({ data: agency });
-  } catch (error: unknown) {
-    console.error("GET /api/agencies/[id] error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return Response.json({ error: "Internal server error", details: msg }, { status: 500 });
+    return success(agency);
+  } catch (err: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/agencies/[id] error:", err);
+    }
+    return serverError(err);
   }
 }
 
@@ -72,9 +70,7 @@ export async function PATCH(
     const authResult = await requireAgencyAccess(request, id);
     if ("error" in authResult) return authResult.error;
 
-    if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
-    }
+    if (!hasDb()) return error("Database not available", 503);
 
     const db = getDb();
 
@@ -83,18 +79,13 @@ export async function PATCH(
     );
     const existing = (existingRows as unknown as Array<Record<string, unknown>>)[0];
 
-    if (!existing) {
-      return Response.json({ error: "Agency not found" }, { status: 404 });
-    }
+    if (!existing) return error("Agency not found", 404);
 
     const body = await request.json();
 
     const parsed = updateAgencySchema.safeParse(body);
     if (!parsed.success) {
-      return Response.json(
-        { error: "Validation failed", details: parsed.error.format() },
-        { status: 400 }
-      );
+      return error("Validation failed", 400, parsed.error.format());
     }
     const data = parsed.data;
 
@@ -149,7 +140,9 @@ export async function PATCH(
           } catch { /* skip invalid service */ }
         }
       } catch (e) {
-        console.error("Failed to update agency_services:", e);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to update agency_services:", e);
+        }
       }
     }
 
@@ -167,7 +160,9 @@ export async function PATCH(
           } catch { /* skip invalid industry */ }
         }
       } catch (e) {
-        console.error("Failed to update agency_industries:", e);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to update agency_industries:", e);
+        }
       }
     }
 
@@ -183,11 +178,12 @@ export async function PATCH(
     }
     revalidatePath("/agencies");
 
-    return Response.json({ data: updated });
-  } catch (error: unknown) {
-    console.error("PATCH /api/agencies/[id] error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return Response.json({ error: "Internal server error", details: msg }, { status: 500 });
+    return success(updated);
+  } catch (err: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("PATCH /api/agencies/[id] error:", err);
+    }
+    return serverError(err);
   }
 }
 
@@ -200,9 +196,7 @@ export async function DELETE(
     const authResult = await requireAgencyAccess(request, id);
     if ("error" in authResult) return authResult.error;
 
-    if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
-    }
+    if (!hasDb()) return error("Database not available", 503);
 
     const db = getDb();
 
@@ -211,9 +205,7 @@ export async function DELETE(
     );
     const existing = (existingRows as unknown as Array<Record<string, unknown>>)[0];
 
-    if (!existing) {
-      return Response.json({ error: "Agency not found" }, { status: 404 });
-    }
+    if (!existing) return error("Agency not found", 404);
 
     // Get slug before deleting for cache invalidation
     const slugRows = await db.execute(sql`SELECT slug FROM agencies WHERE id = ${id} LIMIT 1`);
@@ -229,10 +221,11 @@ export async function DELETE(
     if (slug) revalidatePath(`/agencies/${slug}`);
     revalidatePath("/agencies");
 
-    return Response.json({ message: "Agency permanently deleted" });
-  } catch (error: unknown) {
-    console.error("DELETE /api/agencies/[id] error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return Response.json({ error: "Internal server error", details: msg }, { status: 500 });
+    return success({ message: "Agency permanently deleted" });
+  } catch (err: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("DELETE /api/agencies/[id] error:", err);
+    }
+    return serverError(err);
   }
 }

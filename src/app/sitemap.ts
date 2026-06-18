@@ -15,6 +15,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/contact",
     "/privacy",
     "/terms",
+    "/services",
+    "/how-it-works",
+    "/compare",
   ];
 
   const servicePages = [
@@ -44,6 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   let agencyEntries: MetadataRoute.Sitemap = [];
+  let blogEntries: MetadataRoute.Sitemap = [];
 
   try {
     if (hasDb()) {
@@ -59,10 +63,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "weekly" as const,
         priority: 0.7,
       }));
+
+      // Dynamic blog posts
+      try {
+        const blogRows = await db.execute(
+          sql`SELECT slug, updated_at FROM posts WHERE status = 'published' AND deleted_at IS NULL`
+        );
+        const posts = blogRows as unknown as Array<{ slug: string; updated_at: string | null }>;
+        blogEntries = posts.map((post) => ({
+          url: `${baseUrl}/blog/${post.slug}`,
+          lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
+          changeFrequency: "weekly" as const,
+          priority: 0.6,
+        }));
+      } catch {
+        // Blog table unavailable — skip blog entries
+      }
     }
   } catch {
     // DB unavailable — return static + service URLs only
   }
 
-  return [...staticEntries, ...agencyEntries];
+  return [...staticEntries, ...agencyEntries, ...blogEntries];
 }

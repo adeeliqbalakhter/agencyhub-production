@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Star, MapPin, ExternalLink, Building2 } from "lucide-react";
 import {
@@ -159,7 +160,7 @@ function AgencyCard({ agency, index }: { agency: Agency; index: number }) {
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
         {/* Logo */}
         {agency.logo ? (
-          <img
+          <Image
             src={agency.logo}
             alt={`${agency.name} logo`}
             width={80}

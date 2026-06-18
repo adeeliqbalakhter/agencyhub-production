@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   Plus,
   Pencil,
@@ -299,9 +300,11 @@ export default function PortfolioPage() {
                 {/* Image */}
                 <div className="h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
                   {item.image_url ? (
-                    <img
+                    <Image
                       src={item.image_url}
                       alt={item.title}
+                      width={400}
+                      height={200}
                       className="w-full h-full object-cover"
                     />
                   ) : (

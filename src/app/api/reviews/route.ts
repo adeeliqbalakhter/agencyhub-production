@@ -4,6 +4,7 @@ import { checkRateLimit, rateLimitResponse } from "@/lib/services/rate-limit";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { createReviewSchema } from "@/lib/validations";
+import { success, error, serverError, created } from "@/lib/api/response";
 
 const reviewQuerySchema = z.object({
   agencyId: z.string().uuid(),
@@ -65,9 +66,11 @@ export async function GET(request: NextRequest) {
       data: results,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
-  } catch (error) {
-    console.error("GET /api/reviews error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/reviews error:", err);
+    }
+    return serverError(err);
   }
 }
 
@@ -82,18 +85,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     if (body.website) {
-      return Response.json({ data: { id: "ok" } }, { status: 201 });
+      return created({ id: "ok" });
     }
 
     if (body.formLoadedAt && Date.now() - body.formLoadedAt < 5000) {
-      return Response.json({ data: { id: "ok" } }, { status: 201 });
+      return created({ id: "ok" });
     }
 
     const urlPattern = /https?:\/\/|www\./gi;
     const combinedText = `${body.objective || ""} ${body.enjoyed || ""} ${body.improvements || ""}`;
     const urlMatches = combinedText.match(urlPattern);
     if (urlMatches && urlMatches.length > 3) {
-      return Response.json({ error: "Too many links in review" }, { status: 400 });
+      return error("Too many links in review", 400);
     }
 
     let userId: string | null = null;
@@ -110,11 +113,11 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       if (!body.reviewerName || typeof body.reviewerName !== "string" || body.reviewerName.trim().length < 2 || body.reviewerName.trim().length > 100) {
-        return Response.json({ error: "Full name is required (2-100 characters)" }, { status: 400 });
+        return error("Full name is required (2-100 characters)", 400);
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!body.reviewerEmail || !emailRegex.test(body.reviewerEmail)) {
-        return Response.json({ error: "Valid email is required" }, { status: 400 });
+        return error("Valid email is required", 400);
       }
       reviewerName = body.reviewerName.trim();
       reviewerEmail = body.reviewerEmail.trim().toLowerCase();
@@ -122,10 +125,10 @@ export async function POST(request: NextRequest) {
 
     const parsed = createReviewSchema.safeParse(body);
     if (!parsed.success) {
-      return Response.json({ error: "Validation failed", details: parsed.error.format() }, { status: 400 });
+      return error("Validation failed", 400, parsed.error.format());
     }
 
-    if (!hasDb()) return Response.json({ error: "Database not available" }, { status: 503 });
+    if (!hasDb()) return error("Database not available", 503);
     const db = getDb();
     const data = parsed.data;
 
@@ -133,7 +136,7 @@ export async function POST(request: NextRequest) {
       sql`SELECT id FROM agencies WHERE id = ${data.agencyId} AND status = 'active' AND deleted_at IS NULL`
     );
     if (!(agencyRows as unknown as Array<Record<string, unknown>>)[0]) {
-      return Response.json({ error: "Agency not found" }, { status: 404 });
+      return error("Agency not found", 404);
     }
 
     if (userId) {
@@ -141,14 +144,14 @@ export async function POST(request: NextRequest) {
         sql`SELECT id FROM reviews WHERE agency_id = ${data.agencyId} AND user_id = ${userId} AND deleted_at IS NULL`
       );
       if ((existing as unknown as Array<Record<string, unknown>>)[0]) {
-        return Response.json({ error: "You have already reviewed this agency" }, { status: 409 });
+        return error("You have already reviewed this agency", 409);
       }
     } else if (reviewerEmail) {
       const existing = await db.execute(
         sql`SELECT id FROM reviews WHERE agency_id = ${data.agencyId} AND reviewer_email = ${reviewerEmail} AND deleted_at IS NULL`
       );
       if ((existing as unknown as Array<Record<string, unknown>>)[0]) {
-        return Response.json({ error: "A review from this email already exists for this agency" }, { status: 409 });
+        return error("A review from this email already exists for this agency", 409);
       }
     }
 
@@ -190,17 +193,11 @@ export async function POST(request: NextRequest) {
       ) RETURNING *
     `);
 
-    return Response.json({ data: (rows as unknown as Array<Record<string, unknown>>)[0] }, { status: 201 });
+    return created((rows as unknown as Array<Record<string, unknown>>)[0]);
   } catch (err: unknown) {
-    console.error("POST /api/reviews error:", err);
-    const e = err as Record<string, unknown>;
-    const detail = {
-      message: e?.message ?? "Unknown",
-      code: e?.code ?? null,
-      detail: e?.detail ?? null,
-      constraint: e?.constraint ?? null,
-      cause: e?.cause ? String(e.cause) : null,
-    };
-    return Response.json({ error: "Review submission failed", debug: detail }, { status: 500 });
+    if (process.env.NODE_ENV !== "production") {
+      console.error("POST /api/reviews error:", err);
+    }
+    return serverError(err);
   }
 }

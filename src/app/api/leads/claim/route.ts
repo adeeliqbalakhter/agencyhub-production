@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
-import { success, error } from "@/lib/api/response";
+import { success, error, serverError } from "@/lib/api/response";
 import { z } from "zod";
 
 const claimSchema = z.object({
@@ -120,7 +120,9 @@ export async function POST(request: NextRequest) {
           RETURNING id
         `);
         claimedRowCount = (updated as unknown as Array<Record<string, unknown>>).length;
-        console.log(`[CLAIM] lead=${leadId} agency=${agencyId} updated ${claimedRowCount} row(s)`);
+        if (process.env.NODE_ENV !== "production") {
+          console.log(`[CLAIM] lead=${leadId} agency=${agencyId} updated ${claimedRowCount} row(s)`);
+        }
 
         // 5c. Deduct credit (only if not already charged)
         if (!alreadyCharged) {
@@ -137,7 +139,9 @@ export async function POST(request: NextRequest) {
         `);
       });
     } catch (err) {
-      console.error("[CLAIM] Transaction failed:", err);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[CLAIM] Transaction failed:", err);
+      }
       return error("Failed to claim lead: " + (err instanceof Error ? err.message : "DB error"), 500);
     }
 
@@ -147,7 +151,9 @@ export async function POST(request: NextRequest) {
       rowsClaimed: claimedRowCount,
     });
   } catch (err) {
-    console.error("[CLAIM] Unexpected error:", err);
-    return error("Claim failed: " + (err instanceof Error ? err.message : "Unknown error"), 500);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[CLAIM] Unexpected error:", err);
+    }
+    return serverError(err);
   }
 }

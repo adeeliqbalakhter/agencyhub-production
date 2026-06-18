@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Search,
@@ -103,7 +104,7 @@ export default function ClientAgenciesPage() {
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
                       {agency.logo ? (
-                        <img src={agency.logo} alt="" className="w-12 h-12 rounded-full object-cover" />
+                        <Image src={agency.logo} alt="" width={48} height={48} className="w-12 h-12 rounded-full object-cover" />
                       ) : (
                         <Building2 className="w-6 h-6 text-brand" />
                       )}

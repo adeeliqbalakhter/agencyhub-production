@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, Briefcase, ExternalLink } from "lucide-react";
 
 interface PortfolioItem {
@@ -39,7 +40,7 @@ export function PortfolioSection({ items }: { items: PortfolioItem[] }) {
             >
               {item.image_url ? (
                 <div className="h-44 overflow-hidden">
-                  <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <Image src={item.image_url} alt={item.title} width={400} height={176} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
               ) : (
                 <div className="h-44 bg-gray-100 flex items-center justify-center">
@@ -163,10 +164,10 @@ export function PortfolioSection({ items }: { items: PortfolioItem[] }) {
                 {(selected.image_url || selected.client_logo) && (
                   <div className="md:w-80 shrink-0">
                     {selected.image_url && (
-                      <img src={selected.image_url} alt={selected.title} className="w-full rounded-xl" />
+                      <Image src={selected.image_url} alt={selected.title} width={320} height={240} className="w-full rounded-xl" />
                     )}
                     {selected.client_logo && !selected.image_url && (
-                      <img src={selected.client_logo} alt={selected.client_name || "Client"} className="w-full rounded-xl" />
+                      <Image src={selected.client_logo} alt={selected.client_name || "Client"} width={320} height={240} className="w-full rounded-xl" />
                     )}
                   </div>
                 )}

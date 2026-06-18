@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/auth/guards";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
+import { success, error, serverError, created } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,9 +10,7 @@ export async function GET(request: NextRequest) {
     if ("error" in authResult) return authResult.error;
     const { user } = authResult;
 
-    if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
-    }
+    if (!hasDb()) return error("Database not available", 503);
 
     const db = getDb();
 
@@ -22,10 +21,7 @@ export async function GET(request: NextRequest) {
     const agency = (agencyRows as unknown as Array<{ id: string }>)[0];
 
     if (!agency) {
-      return Response.json(
-        { error: "No agency found for this user" },
-        { status: 404 }
-      );
+      return error("No agency found for this user", 404);
     }
 
     const agencyId = agency.id;
@@ -61,45 +57,39 @@ export async function GET(request: NextRequest) {
 
     // If no subscription, return free plan defaults
     if (!subscription) {
-      return Response.json({
-        data: {
-          subscription: {
-            plan_name: "Free",
-            tier: "free",
-            status: "active",
-            monthly_lead_credits: 10,
-            max_portfolio_items: 5,
-            max_team_members: 1,
-            features: {},
-            monthly_price: 0,
-            yearly_price: 0,
-          },
-          creditBalance,
-          usage: {
-            portfolioCount,
-            teamMemberCount,
-          },
+      return success({
+        subscription: {
+          plan_name: "Free",
+          tier: "free",
+          status: "active",
+          monthly_lead_credits: 10,
+          max_portfolio_items: 5,
+          max_team_members: 1,
+          features: {},
+          monthly_price: 0,
+          yearly_price: 0,
         },
-      });
-    }
-
-    return Response.json({
-      data: {
-        subscription,
         creditBalance,
         usage: {
           portfolioCount,
           teamMemberCount,
         },
+      });
+    }
+
+    return success({
+      subscription,
+      creditBalance,
+      usage: {
+        portfolioCount,
+        teamMemberCount,
       },
     });
-  } catch (error: unknown) {
-    console.error("GET /api/subscriptions error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return Response.json(
-      { error: "Internal server error", details: msg },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/subscriptions error:", err);
+    }
+    return serverError(err);
   }
 }
 
@@ -109,9 +99,7 @@ export async function POST(request: NextRequest) {
     if ("error" in authResult) return authResult.error;
     const { user } = authResult;
 
-    if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
-    }
+    if (!hasDb()) return error("Database not available", 503);
 
     const db = getDb();
 
@@ -122,10 +110,7 @@ export async function POST(request: NextRequest) {
     const agency = (agencyRows as unknown as Array<{ id: string }>)[0];
 
     if (!agency) {
-      return Response.json(
-        { error: "No agency found for this user" },
-        { status: 404 }
-      );
+      return error("No agency found for this user", 404);
     }
 
     const agencyId = agency.id;
@@ -137,10 +122,7 @@ export async function POST(request: NextRequest) {
     const existing = (existingRows as unknown as Array<Record<string, unknown>>)[0];
 
     if (existing) {
-      return Response.json(
-        { error: "An active subscription already exists for this agency" },
-        { status: 409 }
-      );
+      return error("An active subscription already exists for this agency", 409);
     }
 
     // Get the free plan
@@ -150,10 +132,7 @@ export async function POST(request: NextRequest) {
     const freePlan = (planRows as unknown as Array<Record<string, unknown>>)[0];
 
     if (!freePlan) {
-      return Response.json(
-        { error: "Free plan not found" },
-        { status: 500 }
-      );
+      return error("Free plan not found", 500);
     }
 
     const planId = freePlan.id as string;
@@ -170,13 +149,11 @@ export async function POST(request: NextRequest) {
       sql`INSERT INTO lead_credit_transactions (agency_id, amount, type, description) VALUES (${agencyId}, ${monthlyCredits}, 'grant', 'Initial monthly credit grant - Free plan')`
     );
 
-    return Response.json({ data: subscription }, { status: 201 });
-  } catch (error: unknown) {
-    console.error("POST /api/subscriptions error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return Response.json(
-      { error: "Internal server error", details: msg },
-      { status: 500 }
-    );
+    return created(subscription);
+  } catch (err: unknown) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("POST /api/subscriptions error:", err);
+    }
+    return serverError(err);
   }
 }

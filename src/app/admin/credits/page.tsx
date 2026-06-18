@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   CreditCard,
   Building2,
@@ -211,7 +212,7 @@ export default function AdminCreditsPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
                           {a.logo ? (
-                            <img src={a.logo} alt="" className="w-8 h-8 rounded-full object-cover" />
+                            <Image src={a.logo} alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover" />
                           ) : (
                             <Building2 className="w-4 h-4 text-brand" />
                           )}

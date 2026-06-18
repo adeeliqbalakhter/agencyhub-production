@@ -73,7 +73,9 @@ export async function POST(request: NextRequest) {
     const sent = await sendEmail({ ...emailData, to: email });
 
     if (!sent) {
-      console.error("[SIGNUP-OTP] Failed to send OTP email to:", email);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[SIGNUP-OTP] Failed to send OTP email to:", email);
+      }
     }
 
     return success({
@@ -81,8 +83,9 @@ export async function POST(request: NextRequest) {
       emailSent: sent,
     });
   } catch (err) {
-    console.error("[SEND-SIGNUP-OTP] Error:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return error(`Server error: ${message}`, 500);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[SEND-SIGNUP-OTP] Error:", err);
+    }
+    return serverError(err);
   }
 }

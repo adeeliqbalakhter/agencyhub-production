@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireAgencyAccess } from "@/lib/auth/guards";
 import { z } from "zod";
-import { success, created, error } from "@/lib/api/response";
+import { success, created, error, serverError } from "@/lib/api/response";
 import { checkPortfolioLimit } from "@/lib/subscriptions/gates";
 
 const portfolioSchema = z.object({
@@ -49,12 +49,14 @@ async function ensurePortfolioTable() {
 }
 
 function logErr(label: string, err: unknown) {
-  const e = err as Record<string, unknown>;
-  console.error(`[PORTFOLIO] ${label}:`, {
-    message: e?.message ?? "Unknown",
-    code: e?.code ?? null,
-    detail: e?.detail ?? null,
-  });
+  if (process.env.NODE_ENV !== "production") {
+    const e = err as Record<string, unknown>;
+    console.error(`[PORTFOLIO] ${label}:`, {
+      message: e?.message ?? "Unknown",
+      code: e?.code ?? null,
+      detail: e?.detail ?? null,
+    });
+  }
 }
 
 async function revalidateAgency(agencyId: string) {
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return success(rows as unknown as Record<string, unknown>[]);
   } catch (err) {
     logErr("GET", err);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return serverError(err);
   }
 }
 
@@ -101,7 +103,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const portfolioCheck = await checkPortfolioLimit(id);
     if (!portfolioCheck.allowed) {
-      return Response.json({ error: "Portfolio item limit reached for your plan", limit: portfolioCheck.limit }, { status: 403 });
+      return error("Portfolio item limit reached for your plan", 403, { limit: portfolioCheck.limit });
     }
 
     const body = await request.json();
@@ -126,7 +128,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return created((rows as unknown as Array<Record<string, unknown>>)[0]);
   } catch (err) {
     logErr("POST", err);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return serverError(err);
   }
 }
 
@@ -172,7 +174,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return success((updated as unknown as Array<Record<string, unknown>>)[0]);
   } catch (err) {
     logErr("PATCH", err);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return serverError(err);
   }
 }
 
@@ -196,6 +198,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return success({ message: "Portfolio item deleted" });
   } catch (err) {
     logErr("DELETE", err);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return serverError(err);
   }
 }

@@ -44,7 +44,9 @@ export async function GET(request: NextRequest) {
 
     return success({ agency: { ...agency, serviceIds, industryIds } });
   } catch (err) {
-    console.error("GET /api/agencies/mine error:", err);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/agencies/mine error:", err);
+    }
     return serverError(err);
   }
 }

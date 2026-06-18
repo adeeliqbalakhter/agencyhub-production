@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { generateAccessToken, generateRefreshToken } from "@/lib/auth/tokens";
@@ -107,14 +107,18 @@ export async function POST(request: NextRequest) {
     try {
       await db.execute(sql`INSERT INTO user_profiles (user_id) VALUES (${user.id})`);
     } catch (e) {
-      console.error("[VERIFY-SIGNUP] Failed to create user_profiles:", e);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[VERIFY-SIGNUP] Failed to create user_profiles:", e);
+      }
     }
 
     // Create notification_preferences
     try {
       await db.execute(sql`INSERT INTO notification_preferences (user_id) VALUES (${user.id})`);
     } catch (e) {
-      console.error("[VERIFY-SIGNUP] Failed to create notification_preferences:", e);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[VERIFY-SIGNUP] Failed to create notification_preferences:", e);
+      }
     }
 
     // Generate tokens
@@ -167,14 +171,9 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (err: unknown) {
-    console.error("[VERIFY-SIGNUP] Error:", err);
-    const e = err as Record<string, unknown>;
-    const detail = {
-      message: e?.message ?? "Unknown",
-      code: e?.code ?? null,
-      detail: e?.detail ?? null,
-      cause: e?.cause ? String(e.cause) : null,
-    };
-    return NextResponse.json({ error: "Signup verification failed", debug: detail }, { status: 500 });
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[VERIFY-SIGNUP] Error:", err);
+    }
+    return serverError(err);
   }
 }

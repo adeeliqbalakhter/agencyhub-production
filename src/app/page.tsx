@@ -69,8 +69,19 @@ export default function HomePage() {
       "@type": "Organization",
       name: "AgencyHub",
       url: "https://www.agencyhub.com",
+      logo: "https://www.agencyhub.com/logo.png",
       description:
         "AgencyHub is the leading marketing agency directory. Browse verified agencies, read reviews, and get free quotes.",
+      sameAs: [
+        "https://twitter.com/agencyhub",
+        "https://linkedin.com/company/agencyhub",
+      ],
+      contactPoint: {
+        "@type": "ContactPoint",
+        email: "support@agencyhub.com",
+        contactType: "customer support",
+        availableLanguage: ["English"],
+      },
     },
   ];
 

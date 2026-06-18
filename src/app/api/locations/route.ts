@@ -3,6 +3,8 @@ import { hasDb, getDb } from "@/lib/db";
 import { countries, cities } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 
+import { success, error, serverError } from "@/lib/api/response";
+
 export async function GET(request: NextRequest) {
   try {
     if (!hasDb()) {
@@ -27,8 +29,10 @@ export async function GET(request: NextRequest) {
       .from(countries)
       .orderBy(asc(countries.name));
     return Response.json({ data: countryList });
-  } catch (error) {
-    console.error("GET /api/locations error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/locations error:", err);
+    }
+    return serverError(err);
   }
 }

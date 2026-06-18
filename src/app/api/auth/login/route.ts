@@ -121,8 +121,9 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (err) {
-    console.error("[LOGIN] Error:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return error(`Server error: ${message}`, 500);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[LOGIN] Error:", err);
+    }
+    return serverError(err);
   }
 }

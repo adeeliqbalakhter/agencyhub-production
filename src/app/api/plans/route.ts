@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 
+import { success, error, serverError } from "@/lib/api/response";
+
 export async function GET(request: NextRequest) {
   try {
     if (!hasDb()) {
@@ -16,7 +18,9 @@ export async function GET(request: NextRequest) {
 
     return Response.json({ data: plans });
   } catch (error: unknown) {
-    console.error("GET /api/plans error:", error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("GET /api/plans error:", err);
+    }
     const msg = error instanceof Error ? error.message : "Unknown error";
     // Return empty array if table doesn't exist
     if (msg.includes("does not exist") || msg.includes("relation")) {

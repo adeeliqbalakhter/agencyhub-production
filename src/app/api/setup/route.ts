@@ -1,6 +1,7 @@
 import { hasDb, getDb } from "@/lib/db";
 import { countries, cities, services, industries } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
+import { success, error, serverError } from "@/lib/api/response";
 import { requireRole } from "@/lib/auth/guards";
 
 const COUNTRIES = [
@@ -221,7 +222,7 @@ function toSlug(name: string) {
 export async function POST(request: Request) {
   try {
     if (!hasDb()) {
-      return Response.json({ error: "Database not available" }, { status: 503 });
+      return error("Database not available", 503);
     }
 
     const url = new URL(request.url);
@@ -375,9 +376,10 @@ export async function POST(request: Request) {
     }
 
     return Response.json({ message: "Setup complete", results });
-  } catch (error) {
-    console.error("POST /api/setup error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return Response.json({ error: "Setup failed", details: msg }, { status: 500 });
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("POST /api/setup error:", err);
+    }
+    return serverError(err);
   }
 }

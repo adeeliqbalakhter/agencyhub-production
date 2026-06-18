@@ -68,7 +68,9 @@ export async function POST(request: NextRequest) {
       const verificationEmail = buildVerificationEmail(name, emailToken);
       await sendEmail({ ...verificationEmail, to: email });
     } catch (e) {
-      console.error("Failed to send verification email:", e);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Failed to send verification email:", e);
+      }
     }
 
     try {
@@ -79,9 +81,13 @@ export async function POST(request: NextRequest) {
       `);
       const otpEmail = buildOTPEmail(name, otpCode, "email verification");
       const sent = await sendEmail({ ...otpEmail, to: email });
-      if (!sent) console.error("[REGISTER] OTP email send failed for", email);
+      if (!sent && process.env.NODE_ENV !== "production") {
+        console.error("[REGISTER] OTP email send failed for", email);
+      }
     } catch (e) {
-      console.error("Failed to send OTP email:", e);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Failed to send OTP email:", e);
+      }
     }
 
     createAuditLog({

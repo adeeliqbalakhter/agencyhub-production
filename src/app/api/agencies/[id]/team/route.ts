@@ -45,7 +45,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const teamCheck = await checkTeamLimit(id);
     if (!teamCheck.allowed) {
-      return Response.json({ error: "Team member limit reached for your plan", limit: teamCheck.limit }, { status: 403 });
+      return error("Team member limit reached for your plan", 403, { limit: teamCheck.limit });
     }
 
     if (!hasDb()) return error("Database not available", 503);

@@ -56,7 +56,9 @@ export async function GET(request: NextRequest) {
 
     return paginated(rows as unknown as Array<Record<string, unknown>>, { page, limit, total });
   } catch (err) {
-    console.error("[ADMIN-USERS] Error:", err);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[ADMIN-USERS] Error:", err);
+    }
     const msg = err instanceof Error ? err.message : "Unknown error";
     return error(`Server error: ${msg}`, 500);
   }
