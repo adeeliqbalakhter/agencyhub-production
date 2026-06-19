@@ -29,6 +29,7 @@
     "sharp": "^0.34.5",
     "slugify": "^1.6.9",
     "tailwind-merge": "^3.6.0",
+    "uploadthing": "^7.7.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -40,6 +41,8 @@
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
+    "@uploadthing/react": "^7.3.0",
+    "react-dropzone": "^14.3.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
