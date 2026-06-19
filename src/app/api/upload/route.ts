@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { verifyAccessToken } from "@/lib/auth/guards";
+import { authenticateRequest } from "@/lib/auth/guards";
 import { success, error } from "@/lib/api/response";
 
 /**
@@ -14,8 +14,8 @@ const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await verifyAccessToken(request);
-    if (!authResult) return error("Unauthorized", 401);
+    const { user } = await authenticateRequest(request);
+    if (!user) return error("Unauthorized", 401);
 
     const body = await request.json();
     const { file, fileName } = body;
