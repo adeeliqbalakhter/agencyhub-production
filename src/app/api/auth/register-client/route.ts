@@ -5,7 +5,7 @@ import { hashPassword } from "@/lib/auth/password";
 import { generateAccessToken, generateRefreshToken } from "@/lib/auth/tokens";
 import { getClientIp } from "@/lib/services/audit";
 import { checkRateLimit, rateLimitResponse } from "@/lib/services/rate-limit";
-import { error } from "@/lib/api/response";
+import { error, serverError } from "@/lib/api/response";
 import { z } from "zod";
 
 const clientRegisterSchema = z.object({
