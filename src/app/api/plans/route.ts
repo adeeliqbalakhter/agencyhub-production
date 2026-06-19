@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     return Response.json({ data: plans });
   } catch (error: unknown) {
     if (process.env.NODE_ENV !== "production") {
-      console.error("GET /api/plans error:", err);
+      console.error("GET /api/plans error:", error);
     }
     const msg = error instanceof Error ? error.message : "Unknown error";
     // Return empty array if table doesn't exist
