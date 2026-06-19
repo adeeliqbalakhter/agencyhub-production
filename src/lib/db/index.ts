@@ -3,11 +3,12 @@ import postgres from "postgres";
 import * as schema from "./schema";
 
 // Support multiple env var names for PostgreSQL connection
-// Priority: DATABASE_URL → POSTGRES_URL → POSTGRES_URL_NON_POOLING (direct)
+// Priority: NON_POOLING first (direct connection, most reliable for serverless)
+// → DATABASE_URL → POSTGRES_URL (pooler, less reliable)
 const connectionString =
+  process.env.POSTGRES_URL_NON_POOLING ||
   process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_URL_NON_POOLING;
+  process.env.POSTGRES_URL;
 
 const client = connectionString
   ? postgres(connectionString, {
