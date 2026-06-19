@@ -1,76 +1,57 @@
 import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/auth/guards";
+import { verifyAccessToken } from "@/lib/auth/tokens";
 
-const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/svg+xml",
-];
+/**
+ * Upload endpoint - redirects to UploadThing
+ * All file uploads are now handled by UploadThing at /api/uploadthing
+ *
+ * UploadThing endpoints available:
+ * - agencyLogo    (image, max 4MB, 1 file)
+ * - agencyCover   (image, max 8MB, 1 file)
+ * - portfolioImage (image, max 8MB, 5 files)
+ * - avatar        (image, max 2MB, 1 file)
+ * - general       (image 8MB or PDF 4MB, 1 file)
+ *
+ * Use the FileUpload or MultiFileUpload components from @/components/ui/FileUpload
+ */
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024;
+export async function GET() {
+  return Response.json(
+    {
+      message: "Uploads are handled by UploadThing",
+      uploadthing: "/api/uploadthing",
+      endpoints: ["agencyLogo", "agencyCover", "portfolioImage", "avatar", "general"],
+      docs: "Use the FileUpload component for client-side uploads",
+    },
+    { status: 200 }
+  );
+}
 
-import { success, error, serverError } from "@/lib/api/response";
-
+/** Legacy upload handler - redirects to UploadThing */
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await requireAuth(request);
-    if ("error" in authResult) return authResult.error;
-
-    const contentType = request.headers.get("content-type") ?? "";
-    if (!contentType.includes("multipart/form-data")) {
-      return Response.json(
-        { error: "Content-Type must be multipart/form-data" },
-        { status: 400 }
-      );
+    // Check auth
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.split(" ")[1];
+    if (!token) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const user = await verifyAccessToken(token);
+    if (!user) {
+      return Response.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!file || !(file instanceof File)) {
-      return Response.json(
-        { error: "No file provided. Use the 'file' field name." },
-        { status: 400 }
-      );
-    }
-
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      return Response.json(
-        { error: "Invalid file type. Only JPEG, PNG, WebP, and SVG are allowed." },
-        { status: 400 }
-      );
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      return Response.json(
-        { error: `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB` },
-        { status: 400 }
-      );
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64 = buffer.toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64}`;
-
-    const category = formData.get("category")?.toString() ?? "general";
-
+    // Return info about UploadThing
     return Response.json(
       {
-        data: {
-          url: dataUrl,
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: file.type,
-          category,
-        },
+        message: "Direct uploads are now handled by UploadThing",
+        info: "Please use the UploadButton or FileUpload component",
+        uploadthingEndpoint: "/api/uploadthing",
+        availableEndpoints: ["agencyLogo", "agencyCover", "portfolioImage", "avatar", "general"],
       },
-      { status: 201 }
+      { status: 200 }
     );
-  } catch (err) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("POST /api/upload error:", err);
-    }
-    return serverError(err);
+  } catch {
+    return Response.json({ error: "Upload processing failed" }, { status: 500 });
   }
 }
