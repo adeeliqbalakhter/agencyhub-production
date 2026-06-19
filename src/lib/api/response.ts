@@ -39,9 +39,11 @@ export function notFound(message = "Not found"): Response {
 
 export function serverError(err: unknown): Response {
   const message = err instanceof Error ? err.message : "Internal server error";
-  console.error("Server error:", err);
-  const details = process.env.NODE_ENV === "development" ? message : undefined;
-  const body: Record<string, unknown> = { error: "Internal server error" };
-  if (details) body.details = details;
-  return Response.json(body, { status: 500 });
+  const stack = err instanceof Error ? err.stack : undefined;
+  console.error("[SERVER_ERROR]", message, stack);
+  // TODO: Hide details in production after debugging
+  return Response.json(
+    { error: "Internal server error", debug: message, stack },
+    { status: 500 }
+  );
 }
