@@ -2,15 +2,17 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL;
+// Support multiple env var names for PostgreSQL connection
+// Priority: DATABASE_URL → POSTGRES_URL → POSTGRES_URL_NON_POOLING (direct)
+const connectionString =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.POSTGRES_URL_NON_POOLING;
 
 const client = connectionString
   ? postgres(connectionString, {
       prepare: false,
-      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-      max_lifetime: 60 * 30, // 30 minutes
-      connect_timeout: 10,
-      idle_timeout: 20,
+      ssl: { rejectUnauthorized: false },
     })
   : null;
 
