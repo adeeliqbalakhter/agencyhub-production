@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { generateAccessToken, generateRefreshToken } from "@/lib/auth/tokens";
