@@ -6,7 +6,7 @@ import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { createLeadSchema } from "@/lib/validations";
 import { isAdmin } from "@/lib/auth/rbac";
-import { success, error, serverError, created } from "@/lib/api/response";
+import { paginated, success, error, serverError, created } from "@/lib/api/response";
 import { autoAssignLead } from "@/lib/services/lead-assignment";
 
 const leadQuerySchema = z.object({
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const { user } = authResult;
 
     if (!hasDb()) {
-      return success([], { page: 1, limit: 10, total: 0, totalPages: 0 });
+      return paginated([], { page: 1, limit: 10, total: 0 });
     }
 
     const { searchParams } = request.nextUrl;

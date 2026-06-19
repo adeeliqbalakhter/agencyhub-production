@@ -4,12 +4,12 @@ import { hasDb, getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { createAgencySchema, searchParamsSchema } from "@/lib/validations";
 import slugify from "slugify";
-import { success, error, serverError, created } from "@/lib/api/response";
+import { paginated, success, error, serverError, created } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
     if (!hasDb()) {
-      return success([], { page: 1, limit: 20, total: 0, totalPages: 0 });
+      return paginated([], { page: 1, limit: 20, total: 0 });
     }
 
     const db = getDb();
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       total = Number((countResult as unknown as Array<{ count: string }>)[0]?.count ?? 0);
     }
 
-    return success(results, { page, limit, total, totalPages: Math.ceil(total / limit) });
+    return paginated(results, { page, limit, total });
   } catch (err: unknown) {
     if (process.env.NODE_ENV !== "production") {
       console.error("GET /api/agencies error:", err);
