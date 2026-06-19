@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { hasDb, getDb } from "@/lib/db";
+import { hasDb, getDbWithMigrations } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { hashPassword } from "@/lib/auth/password";
 import { generateOTP } from "@/lib/auth/tokens";
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
     if (!hasDb()) return error("Database not available", 503);
-    const db = getDb();
+    const db = await getDbWithMigrations();
 
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);
