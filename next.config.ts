@@ -10,9 +10,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.amazonaws.com" },
       { protocol: "https", hostname: "**.googleapis.com" },
       { protocol: "https", hostname: "ui-avatars.com" },
-      { protocol: "https", hostname: "**.ufs.sh" },
-      { protocol: "https", hostname: "**.utfs.io" },
-      { protocol: "https", hostname: "**.uploadthing.com" },
     ],
   },
   async headers() {
@@ -30,7 +27,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://*.googleusercontent.com https://*.cloudflare.com https://*.res.cloudinary.com https://*.amazonaws.com https://*.googleapis.com https://ui-avatars.com https://*.ufs.sh https://*.utfs.sh https://*.utfs.io https://*.uploadthing.com data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self;",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://*.googleusercontent.com https://*.cloudflare.com https://*.res.cloudinary.com https://*.amazonaws.com https://*.googleapis.com https://ui-avatars.com data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self;",
           },
           { key: "X-XSS-Protection", value: "1; mode=block" },
           {
